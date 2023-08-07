@@ -223,7 +223,7 @@ namespace SharpSvc
 				bool changeServiceSuccess = CreateService(scmHandle, ServiceName, DisplayName, (uint)SERVICE_ACCESS.SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, (uint)ServiceStartupType.Automatic, SERVICE_ERROR_IGNORE, BinaryPathName, null, IntPtr.Zero, null, null, null);
 				if (!changeServiceSuccess)
 				{
-					string msg = $"\nFailed to create the service configuration for service '{ServiceName}'. DeleteService returned error {Marshal.GetLastWin32Error()}.";
+					string msg = $"\nFailed to create the service configuration for service '{ServiceName}'. CreateService returned error {Marshal.GetLastWin32Error()}.";
 					throw new Exception(msg);
 				}
 				else

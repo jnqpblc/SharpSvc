@@ -8,6 +8,7 @@ C:\>SharpSvc.exe
         --ListSvc <Computer|local|hostname|ip> <State|all|running|stopped>
         --GetSvc <Computer|local|hostname|ip> <ServiceName|RemoteRegistry> <Function|list|stop|start|enable|disable>
         --AddSvc <Computer|local|hostname|ip> <Name|MyCustomService> <DisplayName|"My Custom Service"> <ExecutablePath|C:\Windows\notepad.exe + Args>
+        --AddSvc <Computer|local|hostname|ip> <Name|MyCustomService> <DisplayName|"My Custom Service"> <ExecutablePath|C:\Windows\notepad.exe + Args> <ServiceType|win32ownprocess|kerneldriver>
         --RemoveSvc <Computer|local|hostname|ip> <ServiceName|MyCustomService>
 ```
 
@@ -66,5 +67,28 @@ C:\>SharpSvc.exe --GetSvc 10.10.10.10 MyCustomService list
 C:\>SharpSvc.exe --RemoveSvc 10.10.10.10 MyCustomService
 
 The MyCustomService service was successfully deleted.
+
+```
+
+Adding a service via AddSvc defaults to service type SERVICE_WIN32_OWN_PROCESS, but also supports SERVICE_KERNEL_DRIVER
+if specified as "kerneldriver":
+
+```
+C:\>SharpSvc.exe --AddSvc local gdrv "Gigabyte Driver" C:\Windows\System32\gdrv.sys kerneldriver
+
+The gdrv service was successfully created.
+
+C:\>SharpSvc.exe --GetSvc local gdrv list
+
+        ServiceName: gdrv
+        DisplayName: Gigabyte Driver
+        MachineName: .
+        ServiceType: KernelDriver
+        StartType: Automatic
+        Status: Stopped
+
+C:\>SharpSvc.exe --RemoveSvc local gdrv
+
+The gdrv service was successfully deleted.
 
 ```

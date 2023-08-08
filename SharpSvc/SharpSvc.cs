@@ -29,14 +29,30 @@ namespace SharpSvc
 				string Function = args[3];
 				GetSvc(Computer, ServiceName, Function);
 			}
-			else if ((args[0].ToUpper() == "--ADDSVC") && (args.Length == 5))
+			else if ((args[0].ToUpper() == "--ADDSVC") && ((args.Length == 5) || (args.Length == 6)))
 			{
 				string Computer = args[1];
 				string ServiceName = args[2];
 				string DisplayName = args[3];
 				string BinaryPathName = args[4];
-				AddSvc(Computer, ServiceName, DisplayName, BinaryPathName);
-			}
+				uint ServiceType = 0;
+				if ((args.Length == 5) || ((args.Length == 6) && (args[5].ToUpper() == "WIN32OWNPROCESS")))
+				{
+					ServiceType = SERVICE_WIN32_OWN_PROCESS;
+				}
+				else if (args[5].ToUpper() == "KERNELDRIVER")
+				{
+					ServiceType = SERVICE_KERNEL_DRIVER;
+				}
+				if (ServiceType != 0)
+				{
+                    AddSvc(Computer, ServiceName, DisplayName, BinaryPathName, ServiceType);
+                }
+				else
+				{
+					printUsage();
+				}
+            }
 			else if ((args[0].ToUpper() == "--REMOVESVC") && (args.Length == 3))
 			{
 				string Computer = args[1];
@@ -54,7 +70,7 @@ namespace SharpSvc
 			Console.WriteLine("\n[-] Usage: \n\t--ListSvc <Computer|local|hostname|ip> <State|all|running|stopped>" +
 				"\n\t--GetSvc <Computer|local|hostname|ip> <ServiceName|Spooler> <Function|list|stop|start|enable|disable>" +
 				"\n\t--AddSvc <Computer|local|hostname|ip> <Name|MyCustomService> <DisplayName|\"My Custom Service\">" +
-				" <ExecutablePath|C:\\Windows\\notepad.exe + Args>" +
+				" <ExecutablePath|C:\\Windows\\notepad.exe + Args> <ServiceType|win32ownprocess|kerneldriver>" +
 				"\n\t--RemoveSvc <Computer|local|hostname|ip> <ServiceName|MyCustomService>\n");
 			System.Environment.Exit(1);
 		}
@@ -211,7 +227,7 @@ namespace SharpSvc
 			}
 		}
 
-		static void AddSvc(string Computer, string ServiceName, string DisplayName, string BinaryPathName)
+		static void AddSvc(string Computer, string ServiceName, string DisplayName, string BinaryPathName, uint ServiceType)
 		{
 			if (Computer.ToUpper() == "LOCAL")
 			{
@@ -220,10 +236,10 @@ namespace SharpSvc
 			try
 			{
 				IntPtr scmHandle = GetHandleToSCM(Computer, ServiceName);
-				bool changeServiceSuccess = CreateService(scmHandle, ServiceName, DisplayName, (uint)SERVICE_ACCESS.SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, (uint)ServiceStartupType.Automatic, SERVICE_ERROR_IGNORE, BinaryPathName, null, IntPtr.Zero, null, null, null);
+				bool changeServiceSuccess = CreateService(scmHandle, ServiceName, DisplayName, (uint)SERVICE_ACCESS.SERVICE_ALL_ACCESS, ServiceType, (uint)ServiceStartupType.Automatic, SERVICE_ERROR_IGNORE, BinaryPathName, null, IntPtr.Zero, null, null, null);
 				if (!changeServiceSuccess)
 				{
-					string msg = $"\nFailed to create the service configuration for service '{ServiceName}'. DeleteService returned error {Marshal.GetLastWin32Error()}.";
+					string msg = $"\nFailed to create the service configuration for service '{ServiceName}'. CreateService returned error {Marshal.GetLastWin32Error()}.";
 					throw new Exception(msg);
 				}
 				else
@@ -329,6 +345,7 @@ namespace SharpSvc
 		private static extern int CloseServiceHandle(IntPtr hSCObject);
 
 		private const uint SERVICE_NO_CHANGE = 0xFFFFFFFF;
+		private const uint SERVICE_KERNEL_DRIVER = 0x00000001;
 		private const uint SERVICE_WIN32_OWN_PROCESS = 0x00000010;
 		private const uint SERVICE_ERROR_IGNORE = 0x00000000;
 
